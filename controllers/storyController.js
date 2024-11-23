@@ -179,35 +179,61 @@ export const incrementStoryViews = async (req, res) => {
   }
 };
 
+// export const toggleStoryLike = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const userId = req.userId;
+
+//     if (!userId) {
+//       return res.status(400).json({ message: "User ID is required" });
+//     }
+
+//     const story = await storyModel.findById(id);
+//     if (!story) {
+//       return res.status(404).json({ message: "Story not found" });
+//     }
+
+//     const hasLiked = story.likedBy.includes(userId);
+//     if (hasLiked) {
+//       // story.likes -= 1;
+//       story.likedBy = story.likedBy.filter(
+//         (user) => user && user.toString() !== userId.toString()
+//       );
+//     } else {
+//       // story.likes += 1;
+//       story.likedBy.push(userId);
+//     }
+//     story.likes = story.likedBy.length;
+//     await story.save();
+//     res.json({ likes: story.likes, hasLiked: !hasLiked });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 export const toggleStoryLike = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.userId;
-
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
+    const { liked } = req.body;
 
     const story = await storyModel.findById(id);
     if (!story) {
       return res.status(404).json({ message: "Story not found" });
     }
 
-    const hasLiked = story.likedBy.includes(userId);
-    if (hasLiked) {
-      // story.likes -= 1;
-      story.likedBy = story.likedBy.filter(
-        (user) => user && user.toString() !== userId.toString()
-      );
+    // Update the liked status and likes count in the database
+    if (liked) {
+      story.likes += 1;
     } else {
-      // story.likes += 1;
-      story.likedBy.push(userId);
+      story.likes = Math.max(story.likes - 1, 0); // Ensure likes count doesn't go negative
     }
-    story.likes = story.likedBy.length;
+
     await story.save();
-    res.json({ likes: story.likes, hasLiked: !hasLiked });
+
+    res.json({ likes: story.likes, hasLiked: liked });
   } catch (error) {
-    console.log(error);
+    console.error("Error updating like:", error);
     res.status(500).json({ error: error.message });
   }
 };
